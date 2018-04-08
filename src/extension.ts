@@ -813,6 +813,7 @@ function activate(context) {
   context.subscriptions.push(openNoteInBrowserCmd);
   context.subscriptions.push(removeAttachmentCmd);
   context.subscriptions.push(openNoteInClientCmd);
+  context.subscriptions.push(newDiaryNoteCmd);
 
 
 }

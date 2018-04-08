@@ -1,9 +1,9 @@
 {
-    "name": "evermonkey",
-    "displayName": "evermonkey",
+    "name": "everalan",
+    "displayName": "everalan",
     "description": "Markdown support for Evernote.",
-    "version": "2.4.5",
-    "publisher": "michalyao",
+    "version": "1.0.0",
+    "publisher": "alan",
     "engines": {
         "vscode": "^1.10.0"
     },
@@ -19,10 +19,9 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/michalyao/evermonkey.git"
+        "url": "https://github.com/alan-w-255/evermonkey.git"
     },
     "icon": "assets/icon.png",
-    "homepage": "http://monkey.yoryor.me",
     "main": "./out/src/extension",
     "activationEvents": [
         "onCommand:extension.navToNote",
@@ -31,11 +30,11 @@
         "onCommand:extension.sync",
         "onCommand:extension.newNote",
         "onCommand:extension.searchNote",
-        "onCommand:extension.openRecentNotes"
+        "onCommand:extension.openRecentNotes",
+        "onCommand:extension.newDiaryNote"
     ],
     "contributes": {
-        "commands": [
-            {
+        "commands": [{
                 "command": "extension.navToNote",
                 "title": "Ever open: Open note in a tree-like structure."
             },
@@ -85,11 +84,10 @@
             },
             {
                 "command": "extension.newDiaryNote",
-                "title": "Ever everclient: Open a new diary note with markdown supported and metadata inited."
+                "title": "Ever everclient: open a new diary note."
             }
         ],
-        "keybindings": [
-            {
+        "keybindings": [{
                 "command": "extension.navToNote",
                 "key": "alt+o"
             },
