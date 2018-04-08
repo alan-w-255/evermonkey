@@ -55,8 +55,8 @@ function exactMetadata(text) {
       let metadataStr = match[1].trim();
       let metaArray = metadataStr.split("\n");
       metaArray.forEach(value => {
-        let entry = value.split(":");
-        metadata[entry[0]] = entry[1].trim();
+        let sep = value.indexOf(":");
+        metadata[value.substring(0, sep).trim()] = value.substring(sep+1).trim();
       });
       if (metadata["tags"]) {
         let tagStr = metadata["tags"];
@@ -321,19 +321,35 @@ async function publishNote() {
       attachmentsCache[doc.fileName] = [];
       return vscode.window.showInformationMessage(`${notebookName}>>${title} updated successfully.`);
     } else {
-      vscode.window.setStatusBarMessage("Creating the note.", 2000);
-      const createdNote = await createNote(meta, content, resources);
-      createdNote.resources = resources;
-      if (!notesMap[createdNote.notebookGuid]) {
-        notesMap[createdNote.notebookGuid] = [createdNote];
+      const nguid = await getNoteGuid(meta);
+      if (nguid) {
+        vscode.window.setStatusBarMessage("Updating to server.", 2000);
+        const updateNote = await updateNoteOnServer(meta, content, resources, nguid);
+        updateNote.resources = resources;
+        if (!notesMap[updateNote.notebookGuid]) {
+          notesMap[updateNote.notebookGuid] = [updateNote];
+        } else {
+          notesMap[updateNote.notebookGuid].push(updateNote);
+        }
+        localNote[doc.fileName] = updateNote;
+        let notebookName = notebooks.find(notebook => notebook.guid === updateNote.notebookGuid).name;
+        attachmentsCache[doc.fileName] = [];
+        return vscode.window.showInformationMessage(`${notebookName}>>${title} update to server successfully.`);
       } else {
-        notesMap[createdNote.notebookGuid].push(createdNote);
+        vscode.window.setStatusBarMessage("Creating the note.", 2000);
+        const createdNote = await createNote(meta, content, resources);
+        createdNote.resources = resources;
+        if (!notesMap[createdNote.notebookGuid]) {
+          notesMap[createdNote.notebookGuid] = [createdNote];
+        } else {
+          notesMap[createdNote.notebookGuid].push(createdNote);
+        }
+        localNote[doc.fileName] = createdNote;
+        let notebookName = notebooks.find(notebook => notebook.guid === createdNote.notebookGuid).name;
+        attachmentsCache[doc.fileName] = [];
+        return vscode.window.showInformationMessage(`${notebookName}>>${title} created successfully.`);
       }
-      localNote[doc.fileName] = createdNote;
-      let notebookName = notebooks.find(notebook => notebook.guid === createdNote.notebookGuid).name;
-      attachmentsCache[doc.fileName] = [];
-      return vscode.window.showInformationMessage(`${notebookName}>>${title} created successfully.`);
-    }
+   }
   } catch (err) {
     wrapError(err);
   }
@@ -396,6 +412,32 @@ async function getNotebookGuid(notebook) {
       notebookGuid = defaultNotebook.guid;
     }
     return notebookGuid;
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+async function getNoteGuid(meta) {
+    let title = meta["title"];
+    let intitle = 'intitle:' + '"' + title + '"';
+    let nguid = null;
+    let re = await client.listMyNotes(intitle);
+    let resul = re.notes;
+    let arrayLength = resul.length;
+    let i;
+    for (i = 0; i < arrayLength; i ++) {
+        if (resul[i].title == title) nguid = resul[i].guid;
+    }
+    return nguid;
+}
+
+async function updateNoteOnServer(meta, content, resources, nguid) {
+  try {
+    let title = meta["title"];
+    let tagNames = meta["tags"];
+    let notebook = meta["notebook"];
+    const notebookGuid = await getNotebookGuid(notebook);
+    return client.updateNoteResources(nguid, title, content, tagNames, notebookGuid, resources || void 0);
   } catch (err) {
     wrapError(err);
   }
@@ -663,11 +705,17 @@ async function openDevPage() {
       placeHolder: "Copy & paste your token here.",
       ignoreFocusOut: true
     });
-    config.update("token", token, true);
+    if (!token) {
+      return;
+    }
     const noteStoreUrl = await vscode.window.showInputBox({
       placeHolder: "Copy & paste your noteStoreUrl here.",
       ignoreFocusOut: true
     });
+    if (!noteStoreUrl) {
+      return;
+    }
+    config.update("token", token, true);
     config.update("noteStoreUrl", noteStoreUrl, true);
     if (config.token && config.noteStoreUrl) {
       vscode.window.showInformationMessage("Monkey is ready to work. Get the full documents here http://monkey.yoryor.me." +
