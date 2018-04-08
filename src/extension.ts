@@ -453,12 +453,42 @@ async function newNote() {
     });
     // start at the title.
     const titlePosition = startPos.with(1, 8);
-    editor.selection = new vscode.Selection(titlePosition, titlePosition); 
+    editor.selection = new vscode.Selection(titlePosition, titlePosition);
   } catch (err) {
     wrapError(err);
   }
 
 }
+
+// create an empty diary note with metadata and markdown support in vscode
+async function newDiaryNote() {
+  try {
+    if (!notebooks) {
+      await syncAccount();
+    }
+    const doc = await vscode.workspace.openTextDocument({
+      language: "markdown"
+    });
+    // init attachment cache
+    attachmentsCache[doc.fileName] = [];
+    const editor = await vscode.window.showTextDocument(doc);
+    let startPos = new vscode.Position(1, 0);
+    let date = new Date();
+    let dateString = date.toLocaleDateString()
+    let notebookname = "diary-" + date.getFullYear() + (date.getMonth() < 7 ? "-first_half" : "-second_half")
+    editor.edit(edit => {
+      let metaHeader = util.format(METADATA_HEADER, dateString, "diary", notebookname);
+      edit.insert(startPos, metaHeader);
+    });
+    // start at the title.
+    const titlePosition = startPos.with(1, 8);
+    editor.selection = new vscode.Selection(titlePosition, titlePosition);
+  } catch (err) {
+    wrapError(err);
+  }
+
+}
+
 
 // Search note.
 async function searchNote() {
@@ -720,6 +750,7 @@ function activate(context) {
   let openNoteInBrowserCmd = vscode.commands.registerCommand("extension.openNoteInBrowser", openNoteInBrowser);
   let removeAttachmentCmd = vscode.commands.registerCommand("extension.removeAttachment", removeAttachment);
   let openNoteInClientCmd = vscode.commands.registerCommand("extension.viewInEverClient", openNoteInClient);
+  let newDiaryNoteCmd = vscode.commands.registerCommand("extension.newDiaryNote", newNote);
 
   context.subscriptions.push(listAllNotebooksCmd);
   context.subscriptions.push(publishNoteCmd);
@@ -734,7 +765,7 @@ function activate(context) {
   context.subscriptions.push(openNoteInBrowserCmd);
   context.subscriptions.push(removeAttachmentCmd);
   context.subscriptions.push(openNoteInClientCmd);
-  
+
 
 }
 exports.activate = activate;

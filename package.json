@@ -82,6 +82,10 @@
             {
                 "command": "extension.viewInEverClient",
                 "title": "Ever everclient: View note in evernote client."
+            },
+            {
+                "command": "extension.newDiaryNote",
+                "title": "Ever everclient: Open a new diary note with markdown supported and metadata inited."
             }
         ],
         "keybindings": [
@@ -129,6 +133,10 @@
             {
                 "command": "extension.viewInEverClient",
                 "key": "alt+e"
+            },
+            {
+                "command": "extension.newDiaryNote",
+                "key": "alt+d"
             }
         ],
         "configuration": {
