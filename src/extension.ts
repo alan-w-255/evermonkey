@@ -29,7 +29,6 @@ title: %s
 tags: %s
 notebook: %s
 ---
-
 `;
 
 // notesMap -- [notebookguid:[notes]].
@@ -518,17 +517,40 @@ async function newDiaryNote() {
     let date = new Date();
     let dateString = date.toLocaleDateString()
     let notebookname = "diary-" + date.getFullYear() + (date.getMonth() < 7 ? "-first_half" : "-second_half")
+
+    // start at the title.
+    // const titlePosition = startPos.with(1, 8);
+    // editor.selection = new vscode.Selection(titlePosition, titlePosition);
+
+    // add diary template
+    const diaryTemplate = `\
+## experience
+
+## three good things
+
+## challenge
+
+## fear
+
+> what are you afraid of?
+
+> fight it. what will you do to fight it tomorror.
+`;
+    const contentStartPosition = new vscode.Position(6, 0);
     editor.edit(edit => {
       let metaHeader = util.format(METADATA_HEADER, dateString, "diary", notebookname);
-      edit.insert(startPos, metaHeader);
+      let diarySkeleton = metaHeader + util.format(diaryTemplate);
+      edit.insert(startPos, diarySkeleton);
+    }).then((value) => {}, (reason) => {
+      vscode.window.showErrorMessage(reason);
     });
-    // start at the title.
-    const titlePosition = startPos.with(1, 8);
-    editor.selection = new vscode.Selection(titlePosition, titlePosition);
+
+    // start at the content start positon.
+    editor.selection = new vscode.Selection(contentStartPosition, contentStartPosition);
+
   } catch (err) {
     wrapError(err);
   }
-
 }
 
 
@@ -798,7 +820,7 @@ function activate(context) {
   let openNoteInBrowserCmd = vscode.commands.registerCommand("extension.openNoteInBrowser", openNoteInBrowser);
   let removeAttachmentCmd = vscode.commands.registerCommand("extension.removeAttachment", removeAttachment);
   let openNoteInClientCmd = vscode.commands.registerCommand("extension.viewInEverClient", openNoteInClient);
-  let newDiaryNoteCmd = vscode.commands.registerCommand("extension.newDiaryNote", newNote);
+  let newDiaryNoteCmd = vscode.commands.registerCommand("extension.newDiaryNote", newDiaryNote);
 
   context.subscriptions.push(listAllNotebooksCmd);
   context.subscriptions.push(publishNoteCmd);
