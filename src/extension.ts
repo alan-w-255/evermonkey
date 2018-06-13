@@ -484,6 +484,7 @@ async function newNote() {
     const doc = await vscode.workspace.openTextDocument({
       language: "markdown"
     });
+
     // init attachment cache
     attachmentsCache[doc.fileName] = [];
     const editor = await vscode.window.showTextDocument(doc);
@@ -517,6 +518,8 @@ async function newDiaryNote() {
     let date = new Date();
     let dateString = date.toLocaleDateString()
     let notebookname = "diary-" + date.getFullYear() + (date.getMonth() < 7 ? "-first_half" : "-second_half")
+    let weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sat"]
+    let weekday = date.getDay()
 
     // start at the title.
     // const titlePosition = startPos.with(1, 8);
@@ -524,6 +527,8 @@ async function newDiaryNote() {
 
     // add diary template
     const diaryTemplate = `\
+> ${weekdayNames[weekday]}
+
 ## experience
 
 ## three good things
@@ -778,8 +783,11 @@ function activate(context) {
   const filesSettings = vscode.workspace.getConfiguration("files");
   filesSettings.update("eol", "\n", true);
 
-  const markdownSettings = vscode.workspace.getConfiguration();
-  markdownSettings.update("[markdown]", {"editor.quickSuggestions": true}, true);
+  const userSettings = vscode.workspace.getConfiguration();
+  const markdownSettings = userSettings.get("[markdown]");
+  markdownSettings["editor.quickSuggestions"] = true;
+  userSettings.update("[markdown]", markdownSettings, true);
+
   if (!config.token || !config.noteStoreUrl) {
     vscode.window.showInformationMessage("Evernote token not set, please enter ever token command to help you configure.");
   }
